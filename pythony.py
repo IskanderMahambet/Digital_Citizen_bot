@@ -24,13 +24,13 @@ def checkUserId(message):
         cursor = conn.cursor()
         check_user_id = cursor.execute('Select * from users where user_id = "%s"'%(message.from_user.id)).fetchone()
         if check_user_id is not None:
-                bot.send_message(message.chat.id,'Ваша заявка находится на расмотрении. Как только админ одобрит заявку мы отправим вам уведомление.')
+                bot.send_message(message.chat.id,'Ваша заявка находится на расмотрении. Заявка будет расмотрена в течении 1 - 24 часов Зайдите позже..')
                 checkAdminConfirmedDataUser(message)
         else:
-                getNumber(message)
                 conn.commit()
                 conn.close()   
-        
+                getNumber(message)
+                
 def getNumber(message):        
         
         keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)        
@@ -69,27 +69,34 @@ def checkChangeButtonDataUser(message):
         if message.text == 'Подтвердить':
                 conn = sqlite3.connect('users.db')
                 cursor = conn.cursor()
-                cursor.execute('Insert into users values('+str(message.from_user.id)+',"'+dataUser['name']+'","'+dataUser['age']+'","'+dataUser['phone']+'",'"0"')')
-                bot.send_message(message.chat.id,'Спасибо! Ваша заявка находится на расмотрении. Как только админ одобрит заявку мы отправим вам уведомление.')                
+                cursor.execute('Insert into users values('+str(message.from_user.id)+',"'+dataUser['name']+'","'+dataUser['age']+'","'+dataUser['phone']+'","'+dataUser['address']+'",'"0"')')
+                bot.send_message(message.chat.id,'Спасибо! Ваша заявка находится на расмотрении. Заявка будет расмотрена в течении 1 - 24 часов Зайдите позже.')                
                 conn.commit()
                 conn.close()
-                bot.register_next_step_handler(message, checkAdminConfirmedDataUser)               
+                checkAdminConfirmedDataUser(message)           
         elif message.text == 'Повторить регистрацию':
                 checkUserId(message)
         else:
                 bot.send_message(message.chat.id,'Нажмите на кнопку')
-                bot.register_next_step_handler(message, confirmDataUser(message))
+                checkChangeButtonDataUser(message)
+
+
+             
+
 
 def checkAdminConfirmedDataUser(message):
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
         user_id = cursor.execute('Select * from users where is_confirmed = "%s"'%(1)).fetchall()
-        for i in user_id:                     
+        print(user_id)
+        for i in user_id:                        
                 bot.send_message(i[0],"Вы авторизированны, Админ подтвердил вашу заявку")
+                conn.commit()
+                conn.close()                 
                 buttonMainMenu(message)
-        conn.commit()
-        conn.close()                 
-        bot.register_next_step_handler(message, buttonMainMenu)                       
+                      
+
+                   
 
 
 
