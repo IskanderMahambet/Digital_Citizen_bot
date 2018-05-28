@@ -69,9 +69,8 @@ def checkChangeButtonDataUser(message):
         if message.text == 'Подтвердить':
                 conn = sqlite3.connect('users.db')
                 cursor = conn.cursor()
-                cursor.execute('Insert into users values('+str(message.from_user.id)+',"'+dataUser['name']+'","'+dataUser['age']+'","'+dataUser['phone']+'","'+dataUser['address']+'",'"0"')')
-                bot.send_message(message.chat.id,'Спасибо, ваша заявка находится на расмотрении. Как только админ одобрит заявку мы отправим вам уведомление.')
-                checkAdminConfirmedDataUser(message)
+                cursor.execute('Insert into users values('+str(message.from_user.id)+',"'+dataUser['name']+'","'+dataUser['age']+'","'+dataUser['phone']+'",'"0"')')
+                bot.send_message(message.chat.id,'Спасибо! Ваша заявка находится на расмотрении. Как только админ одобрит заявку мы отправим вам уведомление.')                
                 conn.commit()
                 conn.close()
                 bot.register_next_step_handler(message, checkAdminConfirmedDataUser)               
@@ -84,16 +83,13 @@ def checkChangeButtonDataUser(message):
 def checkAdminConfirmedDataUser(message):
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
-        while 0<1:
-                user_id = cursor.execute('Select * from users where is_confirmed = "%s"'%(1)).fetchall()
-                for i in user_id:                     
-                        bot.send_message(i[0],"Вы авторизированны, Админ подтвердил вашу заявку")
-                        continue
-                continue
-        buttonMainMenu(message)                      
+        user_id = cursor.execute('Select * from users where is_confirmed = "%s"'%(1)).fetchall()
+        for i in user_id:                     
+                bot.send_message(i[0],"Вы авторизированны, Админ подтвердил вашу заявку")
+                buttonMainMenu(message)
         conn.commit()
         conn.close()                 
-
+        bot.register_next_step_handler(message, buttonMainMenu)                       
 
 
 
