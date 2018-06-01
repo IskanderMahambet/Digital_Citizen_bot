@@ -22,10 +22,12 @@ def start(message):
 def checkUserId(message):
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
-        check_user_id = cursor.execute('Select * from users where user_id = "%s"'%(message.from_user.id)).fetchone()
-        if check_user_id is not None:
-                bot.send_message(message.chat.id,'Ваша заявка находится на расмотрении. Заявка будет расмотрена в течении 1 - 24 часов Зайдите позже..')
+        user_id1 = cursor.execute('Select * from users where user_id = "%s" and is_confirmed = "%s" '%(message.from_user.id,1)).fetchall()
+        user_id2 = cursor.execute('Select * from users where user_id = "%s"'%(message.from_user.id)).fetchall()
+        if user_id1 is not None:
                 checkAdminConfirmedDataUser(message)
+        elif user_id2 is not None:  
+                bot.send_message(message.chat.id,'Ваша заявка находится на расмотрении. Заявка будет расмотрена в течении 1 - 24 часов. Зайдите позже и снова запустите бота')
         else:
                 conn.commit()
                 conn.close()   
@@ -70,7 +72,7 @@ def checkChangeButtonDataUser(message):
                 conn = sqlite3.connect('users.db')
                 cursor = conn.cursor()
                 cursor.execute('Insert into users values('+str(message.from_user.id)+',"'+dataUser['name']+'","'+dataUser['age']+'","'+dataUser['phone']+'","'+dataUser['address']+'",'"0"')')
-                bot.send_message(message.chat.id,'Спасибо! Ваша заявка находится на расмотрении. Заявка будет расмотрена в течении 1 - 24 часов Зайдите позже.')                
+                bot.send_message(message.chat.id,'Спасибо! Ваша заявка находится на расмотрении. Заявка будет расмотрена в течении 1 - 24 часов. Зайдите позже и запустите бота снова.')                
                 conn.commit()
                 conn.close()
                 checkAdminConfirmedDataUser(message)           
@@ -88,7 +90,6 @@ def checkAdminConfirmedDataUser(message):
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
         user_id = cursor.execute('Select * from users where is_confirmed = "%s"'%(1)).fetchall()
-        print(user_id)
         for i in user_id:                        
                 bot.send_message(i[0],"Вы авторизированны, Админ подтвердил вашу заявку")
                 conn.commit()
@@ -121,15 +122,20 @@ def readMoreButton(message):
         keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)        
         readMore = types.KeyboardButton('Читать далее...')
         keyboard.add(readMore)
-        bot.send_message(message.chat.id,"Клуб Активистам города которым не всё равно где жить ",reply_markup = keyboard)
-        bot.register_next_step_handler(message, changeReadMoreButton)                      
+   
+        
+        bot.send_message(message.chat.id,"Клуб Активистам города которым не всё равно где жить... ",reply_markup = keyboard)
+        bot.register_next_step_handler(message, changeReadMoreButton)
+
+                     
         
 def changeReadMoreButton(message):
         if message.text == 'Читать далее...':                
                 bot.send_message(message.chat.id,"Эту инфу должен заполнить админ")       
-
-
-
+                buttonMainMenu(message)                      
+        else:
+                bot.send_message(message.chat.id,"Нажмите на кнопку")       
+                bot.register_next_step_handler(message, readMoreButton)        
 
 
 
@@ -149,11 +155,29 @@ def sendMessageButton(message):
         keyboard.add(button4)
         button5 = types.KeyboardButton('Поменять избранные категории')
         keyboard.add(button5)
-
+        
+        returnButton = types.KeyboardButton('Вернуться в главное меню')
+        keyboard.add(returnButton)
+        
         bot.send_message(message.chat.id,"Чтобы отправить обращение нужно пройти 4 шага - №1 <Выберите категорию обращения>",reply_markup = keyboard)
         bot.register_next_step_handler(message, changeReadMoreButton)
         
-
+def changeSendMessageButton(message):
+        if message.text == 'Грязь и мусор':
+                pass
+        elif message.text == 'Ямы':
+                pass
+        elif message.text == 'Неисправное освещение':
+                pass
+        elif message.text == 'Показать все категории':
+                pass
+        elif message.text == 'Поменять избранные категории':
+                pass
+        elif message.text == 'Вернуться в главное меню':
+                bot.register_next_step_handler(message, buttonMainMenu)
+        else:
+                bot.send_message(message.chat.id,"Нажмите на кнопку")       
+                bot.register_next_step_handler(message, sendMessageButton)   
 
 
 
@@ -163,7 +187,8 @@ def checkChangeButtonMainMenu(message):
                 readMoreButton(message)
                 
         elif message.text == 'Отправить обращение':
-                pass
+                sendMessageButton(message)
+                
         elif message.text == 'Мои обращения':
                 pass
         elif message.text == 'Обратная связь':
